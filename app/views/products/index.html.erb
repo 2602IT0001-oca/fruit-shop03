@@ -1,0 +1,15 @@
+
+<h1>商品一覧</h1>
+
+<%= link_to "新規登録", products_new_path %>
+
+<% @products.each do |product| %>
+  <div>
+    <p>商品名: <%= product.name %></p>
+    <p>説明: <%= product.description %></p>
+    <p>価格: <%= product.price %> 円</p>
+  </div>
+
+  <hr>
+
+<% end %>

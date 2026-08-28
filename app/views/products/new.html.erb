@@ -1,0 +1,22 @@
+<h1>新規商品登録</h1>
+
+<%= form_with model: @product do |f| %>
+  <div>
+    <%= f.label :name, "商品名" %>
+    <%= f.text_field :name %>
+  </div>
+
+  <div>
+    <%= f.label :description, "商品説明" %>
+    <%= f.text_area :description %>
+  </div>
+
+  <div>
+    <%= f.label :price, "価格" %>
+    <%= f.number_field :price %>
+  </div>
+
+  <div>
+    <%= f.submit "登録" %>
+  </div>
+<% end %>
