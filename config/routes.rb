@@ -19,4 +19,5 @@ Rails.application.routes.draw do
   # root "posts#index"
   root to: "homes#top"
   get 'products', to: 'products#index'
+  get 'products/:id', to: 'products#show', as: 'product'
 end

@@ -8,6 +8,7 @@
     <p>商品名: <%= product.name %></p>
     <p>説明: <%= product.description %></p>
     <p>価格: <%= product.price %> 円</p>
+    <%=link_to"詳細", product_path(product.id) %>
   </div>
 
   <hr>
