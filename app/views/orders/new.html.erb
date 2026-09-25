@@ -1,0 +1,30 @@
+<h1>注文</h1>
+
+<%= form_with(model: @order, url: confirm_orders_path, local: true, data: { turbo: false }) do |form| %>
+  <% if @order.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@order.errors.count, "error") %> prohibited this user from being saved:</h2>
+
+      <ul>
+        <% @order.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= form.hidden_field :product_id, value: @product.id %>
+
+  <h4>商品名</h4>
+  <%= @product.name %>
+
+  <h4>個数</h4>
+  <%= form.number_field :count %>
+
+  <h4>送り先</h4>
+  <%= form.text_field :address %>
+
+  <div>
+    <%= form.submit '注文確認' %>
+  </div>
+<% end %>

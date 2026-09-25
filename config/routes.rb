@@ -1,27 +1,22 @@
 # app/config/routes.rb
 
 Rails.application.routes.draw do
-  devise_for :users
-  resources :users
-  # 商品登録
-  get 'products/new'
-  post 'products', to: 'products#create'  # 登録
+  devise_for :users, controllers: { registrations: "users/registrations" }
+  resources :mypage, only: [:show]
+  resources :products
 
-  # 商品一覧
-  get 'products', to: 'products#index'
+  resources :orders, only: [:index, :new, :create] do
+    collection do
+      post :confirm
+    end
+    member do
+      get :complete
+    end
+  end
 
-  # 商品詳細
-  get 'products/:id', to: 'products#show', as: 'product'
+  delete "products/:id", to: "products#destroy", as: :destroy_product
 
-  # 商品編集
-  get 'products/:id/edit', to: 'products#edit', as: 'edit_product'
-  patch 'products/:id', to: 'products#update'
-
-  # 商品削除
-  delete 'products/:id', to: 'products#destroy', as: 'destroy_product'
-
-  # トップページ
-  root to: "homes#top"
+  root "homes#top"
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

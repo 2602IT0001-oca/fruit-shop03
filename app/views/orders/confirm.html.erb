@@ -1,0 +1,23 @@
+<h1>注文確認</h1>
+
+<%= form_with(model: @order) do |form| %>
+  <h4>商品名</h4>
+  <%= @product.name %>
+  <%= form.hidden_field :product_id, value: @product.id %>
+
+  <h4>個数</h4>
+  <%= @order.count %> 個
+  <%= form.hidden_field :count, value: @order.count %>
+
+  <h4>合計金額</h4>
+  <%= @order.total_price %> 円
+  <%= form.hidden_field :total_price, value: @order.total_price %>
+
+  <h4>送り先</h4>
+  <%= @order.address %>
+  <%= form.hidden_field :address, value: @order.address %>
+
+  <div class="actions">
+    <%= form.submit '注文' %>
+  </div>
+<% end %>

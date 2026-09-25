@@ -1,4 +1,7 @@
 class ProductsController < ApplicationController
+  before_action :authenticate_user!, except: %i[index show]
+  before_action :check_admin, except: %i[index show]
+
   # 新規登録
   def new
     # 新しい商品を作成するための空のインスタンスを用意
@@ -39,7 +42,7 @@ class ProductsController < ApplicationController
     @product = Product.find(params[:id])
     if @product.update(product_params)
       # 商品詳細にリダイレクト
-      redirect_to product_path
+      redirect_to product_path(@product)
     else
       # 失敗時に編集画面に戻る
       render :edit
@@ -55,6 +58,12 @@ class ProductsController < ApplicationController
   end
 
   private
+
+    def check_admin
+      unless current_user.admin_flg
+        redirect_to products_path, alert: '管理者権限が必要です。'
+      end
+    end
 
     # ストロングパラメータで、フォームから送信されたデータを許可する
     def product_params
