@@ -27,7 +27,7 @@ class ApplicationController < ActionController::Base
 
   def store_recent_product
     return unless controller_name == "products" && action_name == "show"
-    return unless Product.exists?(params[:id])
+    return unless Product.exists?(id: params[:id])
 
     product_id = params[:id].to_i
     session[:recent_product_ids] ||= []
@@ -45,7 +45,7 @@ class ApplicationController < ActionController::Base
     Cart.transaction do
       session[:cart].each do |item|
         product = Product.find_by(id: item["id"])
-        next unless product && item["count"].to_i.positive?
+        next unless product&.on_sale? && item["count"].to_i.positive?
 
         cart_item = cart.cart_items.find_or_initialize_by(product: product)
         cart_item.quantity += item["count"].to_i

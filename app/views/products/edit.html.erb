@@ -21,6 +21,14 @@
     <%= f.number_field :price %>
   </div>
 
+  <fieldset>
+    <legend>販売状況</legend>
+    <% Product.statuses.keys.each do |status| %>
+      <%= f.radio_button :status, status %>
+      <%= f.label :status, I18n.t("enums.product.status.#{status}"), value: status %>
+    <% end %>
+  </fieldset>
+
   <div>
     <%= f.submit "更新" %>
   </div>

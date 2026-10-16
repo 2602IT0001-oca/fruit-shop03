@@ -1,14 +1,25 @@
 <h1>注文完了</h1>
 <h3>ご注文が完了しました。</h3>
-
-<% if @product.photo.attached? %>
-  <%= image_tag @product.thumbnail, alt: @product.name %>
-<% end %>
-<h4>商品名</h4>
-<%= @product.name %>
-
-<h4>個数</h4>
-<%= @order.count %> 個
-
-<h4>金額</h4>
-<%= @order.total_price %> 円
+<h4>注文商品一覧</h4>
+<table>
+  <thead>
+    <tr>
+      <th>商品名</th>
+      <th>個数</th>
+      <th>価格</th>
+      <th>小計</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @order.order_details.each do |detail| %>
+      <tr>
+        <td><%= detail.product.name %></td>
+        <td><%= detail.quantity %> 個</td>
+        <td><%= "¥" + number_with_delimiter(detail.price) %></td>
+        <td><%= "¥" + number_with_delimiter(detail.price * detail.quantity) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+<h4>合計金額</h4>
+<%= "¥" + number_with_delimiter(@order.total_price) %>

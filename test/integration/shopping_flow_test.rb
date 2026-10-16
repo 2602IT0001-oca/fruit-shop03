@@ -36,7 +36,7 @@ class ShoppingFlowTest < ActionDispatch::IntegrationTest
   end
 
   test "invalid guest quantities do not change the cart" do
-    [0, -1, "1.5", "bad"].each do |count|
+    [ 0, -1, "1.5", "bad" ].each do |count|
       post add_product_carts_url, params: { product_id: @product.id, count: count }
       assert_redirected_to product_path(@product)
       assert_empty session[:cart] || []
@@ -56,7 +56,7 @@ class ShoppingFlowTest < ActionDispatch::IntegrationTest
     get cart_url(cart)
     assert_response :success
     assert_equal 6, item.reload.quantity
-    assert_select "a[href=?]", new_order_path(product_id: @product.id, count: 6), text: "この商品を注文する"
+    assert_select "a[href=?]", new_order_path, text: "注文へ進む"
     delete destroy_user_session_url
     follow_redirect!
     post add_product_carts_url, params: { product_id: @product.id, count: 1 }
@@ -128,6 +128,16 @@ class ShoppingFlowTest < ActionDispatch::IntegrationTest
     assert_nil admin.reload.cart
   end
 
+
+  test "invalid product identifiers neither run a condition nor enter recent history" do
+    get product_url("0 OR 1=1")
+    assert_response :not_found
+    assert_empty session[:recent_product_ids] || []
+    get product_url(@product)
+    assert_response :success
+    assert_equal [ @product.id ], session[:recent_product_ids]
+  end
+
   test "recent products are unique limited to five and tolerate deletion" do
     products = 6.times.map { |i| Product.create!(name: "閲覧商品#{i}", price: 100) }
     products.each { |product| get product_url(product); assert_response :success }
@@ -139,33 +149,55 @@ class ShoppingFlowTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "single product orders validate and recalculate the stored price" do
+  test "multiple products are confirmed ordered and removed from only the buyers cart" do
     sign_in @user
     @product.update!(price: 300)
-    get new_order_url(product_id: @product.id, count: 2)
+    second = products(:two)
+    second.update!(price: 150)
+    post cart_items_url, params: { cart_item: { product_id: @product.id, quantity: 2 } }
+    post cart_items_url, params: { cart_item: { product_id: second.id, quantity: 3 } }
+    other_item = @other.create_cart!.cart_items.create!(product: @product, quantity: 7)
+    get new_order_url
     assert_response :success
-    post confirm_orders_url, params: { order: { product_id: @product.id, count: 0, address: "" } }
-    assert_response :unprocessable_entity
-    post confirm_orders_url, params: { order: { product_id: @product.id, count: 2, address: "大阪市" } }
+    assert_select "tbody tr", count: 2
+    post confirm_orders_url, params: { order: { address: "" } }
+    assert_redirected_to new_order_path
+    post confirm_orders_url, params: { order: { address: "大阪市" } }
     assert_response :success
-    assert_select "input[name='order[total_price]'][value='600']"
-    assert_difference "Order.count", 1 do
-      post orders_url, params: { order: { product_id: @product.id, count: 2, address: "大阪市", total_price: 1 } }
+    assert_select "input[name='order[total_price]'][value='1050']"
+    assert_difference({ "Order.count" => 1, "OrderDetail.count" => 2 }) do
+      post orders_url, params: { order: {
+        address: "大阪市", total_price: 1050, user_id: @other.id,
+        order_details_attributes: { "0" => { product_id: second.id, quantity: 99, price: 1 } }
+      } }
     end
     order = @user.orders.last
-    assert_equal 600, order.total_price
+    assert_equal 1050, order.total_price
+    assert_equal [ [ @product.id, 2, 300 ], [ second.id, 3, 150 ] ], order.order_details.order(:id).pluck(:product_id, :quantity, :price)
+    assert_empty @user.cart.cart_items.reload
+    assert_equal 7, other_item.reload.quantity
     follow_redirect!
     assert_response :success
+    assert_select "tbody tr", count: 2
+    @product.update!(price: 900)
     get orders_url
     assert_response :success
-    sign_out @user
-    sign_in @other
+    assert_select "tbody tr:first-child td:nth-child(3)", text: /300/
+    assert_select "tbody tr:first-child td:nth-child(4)", text: /600/
+    assert_no_difference [ "Order.count", "OrderDetail.count" ] do
+      post orders_url, params: { order: { address: "大阪市", total_price: 1050 } }
+    end
+    delete destroy_user_session_url
+    post user_session_url, params: { user: { email: @other.email, password: "password" } }
     get complete_order_url(order)
     assert_response :not_found
+    get orders_url
+    assert_select "p", text: "注文履歴はまだありません。"
   end
 
   test "deleting an ordered product returns a useful error without breaking order history" do
-    Order.create!(user: @user, product: @product, count: 1, address: "大阪", total_price: @product.price)
+    Order.create!(user: @user, address: "大阪", total_price: @product.price,
+      order_details: [ OrderDetail.new(product: @product, quantity: 1, price: @product.price) ])
     admin = User.create!(name: "管理者", email: "admin@example.test", password: "password", admin_flg: true)
     sign_in admin
     assert_no_difference "Product.count" do

@@ -4,6 +4,11 @@ class CartItemsController < ApplicationController
 
   def create
     product = Product.find(cart_item_params[:product_id])
+    unless product.on_sale?
+      redirect_to product_path(product), alert: "売り切れの商品はカートに追加できません。"
+      return
+    end
+
     quantity = Integer(cart_item_params[:quantity].to_s, 10, exception: false)
     unless quantity&.positive?
       redirect_to product_path(product), alert: "個数は1以上の整数を入力してください。"

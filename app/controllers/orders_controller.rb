@@ -1,57 +1,75 @@
 class OrdersController < ApplicationController
   before_action :authenticate_user!
   before_action :check_customer, only: %i[new confirm create]
+  before_action :check_cart, only: %i[new confirm create]
 
   def new
-    unless params[:product_id].present?
-      redirect_to products_path, alert: "注文する商品を選択してください。"
-      return
-    end
     @order = Order.new
-    @product = Product.find(params[:product_id])
-    @order.count = params[:count] if params[:count].present?
-  end
-
-  def index
-    @orders = current_user.orders.includes(:product).all
+    @cart_items = current_user.cart.cart_items.includes(:product)
+    user_cart_calculation
   end
 
   def confirm
-    @order = current_user.orders.new(order_params)
-    @product = Product.find(@order.product_id)
-    if @order.valid?
-      @order.total_price = cal_total_price(@product.price, @order.count)
-    else
-      render :new, status: :unprocessable_entity
+    @order = Order.new(order_params)
+    @order.user_id = current_user.id
+    @cart_item = current_user.cart.cart_items.includes(:product)
+    @cart_item.each do |item|
+      @order.order_details.build(
+        product_id: item.product.id,
+        quantity: item.quantity,
+        price: item.product.price
+      )
+    end
+    item_totals = @order.order_details.map do |detail|
+      calculate_item_total(detail.price, detail.quantity)
+    end
+    @order.total_price = calculate_total_sum(item_totals)
+    if !@order.valid?
+      redirect_to new_order_path, alert: "注文内容に誤りがあります。"
     end
   end
 
   def create
-    @order = current_user.orders.new(order_params)
-    @product = Product.find(@order.product_id)
-    # 合計金額はhiddenフィールドを信用せず、保存時にも計算する。
-    if @order.valid?
-      @order.total_price = cal_total_price(@product.price, @order.count)
-      @order.save!
+    @order = Order.new(order_params)
+    @order.user_id = current_user.id
+    if @order.save
+      current_user.cart.cart_items.each do |item|
+        OrderDetail.create(
+          order_id: @order.id,
+          product_id: item.product.id,
+          quantity: item.quantity,
+          price: item.product.price
+        )
+      end
+      current_user.cart.cart_items.destroy_all
       redirect_to complete_order_path(@order), status: :see_other
     else
-      render :new, status: :unprocessable_entity
+      redirect_to new_order_path, alert: "注文内容に誤りがあります。"
     end
   end
 
   def complete
     @order = current_user.orders.find(params[:id])
-    @product = @order.product
+  end
+
+  def index
+    @orders = current_user.orders.order(created_at: :desc)
   end
 
   private
 
   def order_params
-    params.require(:order).permit(:address, :count, :product_id)
+    # 07-11で削除したproduct_id・countを07-09のパラメータから取り除く。
+    params.require(:order).permit(:address, :total_price)
   end
 
-  def cal_total_price(price, count)
-    price * count
+  def check_cart
+    cart = current_user.cart
+    if cart.cart_items.empty?
+      redirect_to cart_path(cart), alert: "カートは空です。"
+    elsif cart.cart_items.joins(:product).merge(Product.sold_out).exists?
+      redirect_to cart_path(cart), alert: "売り切れの商品をカートから削除してください。"
+    end
   end
 
   def check_customer

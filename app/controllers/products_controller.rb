@@ -24,7 +24,8 @@ class ProductsController < ApplicationController
 
   # 商品一覧
   def index
-    @products = Product.all
+    @q = Product.ransack(params[:q])
+    @products = @q.result.includes(photo_attachment: :blob)
   end
 
   # 商品詳細
@@ -63,12 +64,12 @@ class ProductsController < ApplicationController
 
     def check_admin
       unless current_user.admin_flg
-        redirect_to products_path, alert: '管理者権限が必要です。'
+        redirect_to products_path, alert: "管理者権限が必要です。"
       end
     end
 
     # ストロングパラメータで、フォームから送信されたデータを許可する
     def product_params
-      params.require(:product).permit(:name, :description, :price, :photo)
+      params.require(:product).permit(:name, :description, :price, :photo, :status)
     end
 end

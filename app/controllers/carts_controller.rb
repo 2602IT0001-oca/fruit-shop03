@@ -4,7 +4,7 @@ class CartsController < ApplicationController
   before_action :redirect_signed_in_user, except: :show
 
   def show
-    @cart = current_user.cart
+    @cart = Cart.where(user_id: current_user.id).find(params[:id])
     user_cart_calculation
   end
 
@@ -15,6 +15,11 @@ class CartsController < ApplicationController
 
   def add_product
     product = Product.find(cart_params[:product_id])
+    unless product.on_sale?
+      redirect_to product_path(product), alert: "売り切れの商品はカートに追加できません。"
+      return
+    end
+
     count = Integer(cart_params[:count].to_s, 10, exception: false)
     unless count&.positive?
       redirect_to product_path(product), alert: "個数は1以上の整数を入力してください。"

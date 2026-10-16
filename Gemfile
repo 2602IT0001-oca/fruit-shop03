@@ -67,3 +67,8 @@ end
 
 # Devise
 gem "devise"
+
+# 教材 07-12・07-13: 販売状況の日本語化と商品検索
+gem "enum_help"
+gem "devise-i18n"
+gem "ransack"
