@@ -33,6 +33,7 @@ cd /workspace/fruit-shop03
 ```sh
 RAILS_ENV=test bin/rails db:prepare
 PARALLEL_WORKERS=2 bin/rails test
+RAILS_ENV=test bin/rails test:system
 bin/rails zeitwerk:check
 bundle exec ruby test/order_migration_checks.rb
 ```
