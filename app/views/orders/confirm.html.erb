@@ -1,26 +1,37 @@
 <h1>注文確認</h1>
-
-<%= form_with(model: @order, data: { turbo: false }) do |form| %>
-  <% if @product.photo.attached? %>
-  <%= image_tag @product.thumbnail, alt: @product.name %>
-<% end %>
-<h4>商品名</h4>
-  <%= @product.name %>
-  <%= form.hidden_field :product_id, value: @product.id %>
-
-  <h4>個数</h4>
-  <%= @order.count %> 個
-  <%= form.hidden_field :count, value: @order.count %>
-
+<%= form_with(model: @order) do |form| %>
+  <h3>注文商品一覧</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>商品名</th>
+        <th>個数</th>
+        <th>価格</th>
+        <th>小計</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @order.order_details.each_with_index do |detail, i| %>
+        <tr>
+          <td><%= detail.product.name %></td>
+          <td><%= detail.quantity %></td>
+          <td><%= "¥" + number_with_delimiter(detail.price) %></td>
+          <td><%= "¥" + number_with_delimiter(detail.price * detail.quantity) %></td>
+        </tr>
+        <%# 各order_detailのhiddenフィールドをセット（フォーム送信用） %>
+        <%= form.hidden_field "order_details_attributes[#{i}][product_id]", value: detail.product_id %>
+        <%= form.hidden_field "order_details_attributes[#{i}][quantity]", value: detail.quantity %>
+        <%= form.hidden_field "order_details_attributes[#{i}][price]", value: detail.price %>
+      <% end %>
+    </tbody>
+  </table>
   <h4>合計金額</h4>
-  <%= @order.total_price %> 円
+  <%= "¥" + number_with_delimiter(@order.total_price) %>
   <%= form.hidden_field :total_price, value: @order.total_price %>
-
   <h4>送り先</h4>
   <%= @order.address %>
   <%= form.hidden_field :address, value: @order.address %>
-
   <div class="actions">
-    <%= form.submit '注文' %>
+    <%= form.submit '注文確定' %>
   </div>
 <% end %>

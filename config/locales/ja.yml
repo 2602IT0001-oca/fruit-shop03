@@ -1,0 +1,27 @@
+ja:
+  enums:
+    product:
+      status:
+        on_sale: 販売中
+        sold_out: 売り切れ
+  activerecord:
+    models:
+      product: 商品
+      user: ユーザー
+      order: 注文
+      order_detail: 注文明細
+    attributes:
+      product:
+        name: 商品名
+        price: 価格
+        description: 商品説明
+        status: 販売状況
+      user:
+        name: ユーザ名
+      order:
+        address: 送り先
+        total_price: 合計金額
+        order_details: 注文商品
+      order_detail:
+        quantity: 個数
+        price: 価格

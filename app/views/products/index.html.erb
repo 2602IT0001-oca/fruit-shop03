@@ -1,21 +1,43 @@
-
 <h1>商品一覧</h1>
-
 <% if current_user&.admin_flg? %>
   <%= link_to "新規登録", new_product_path %>
 <% end %>
-
-<% @products.each do |product| %>
-  <div>
-    <% if product.photo.attached? %>
-      <%= image_tag product.thumbnail, alt: product.name %>
+<h2>検索欄</h2>
+<%= search_form_for @q do |f| %>
+  <p>商品名 : <%= f.text_field :name_cont %></p>
+  <p>価格 : <%= f.number_field :price_eq %></p>
+  <%= f.submit %>
+<% end %>
+<hr>
+<table>
+  <thead>
+    <tr>
+      <th><%= sort_link(@q, :name, '商品名') %></th>
+      <th><%= sort_link(@q, :price, '価格') %></th>
+      <th colspan="5">説明</th>
+      <th colspan="3"></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @products.each do |product| %>
+      <tr>
+        <td>
+          <%= product.name %>
+        </td>
+        <td>
+          <%= product.price %> 円
+        </td>
+        <td>
+          <%= product.description %>
+        </td>
+        <td>
+          <%= link_to '詳細', product_path(product) %>
+        </td>
+      </tr>
     <% end %>
-    <p>商品名: <%= product.name %></p>
-    <p>説明: <%= product.description %></p>
-    <p>価格: <%= product.price %> 円</p>
-    <%= link_to "詳細", product_path(product) %>
-  </div>
-
-  <hr>
-
+  </tbody>
+</table>
+<% if user_signed_in? && !current_user.admin_flg? %>
+  <br>
+  <%= link_to '買い物かごを見る', cart_path(current_user.cart) %>
 <% end %>

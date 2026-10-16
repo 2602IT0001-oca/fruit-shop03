@@ -10,6 +10,8 @@ module FruitShop03
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.1
+    config.time_zone = "Tokyo"
+    config.i18n.default_locale = :ja
     config.active_storage.variant_processor = :mini_magick
 
     # Please, add to the `ignore` list any other `lib` subdirectories that do

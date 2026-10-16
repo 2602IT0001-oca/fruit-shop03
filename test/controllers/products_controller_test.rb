@@ -45,6 +45,22 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#error_explanation li"
   end
 
+
+  test "invalid new products keep the form and do not create records" do
+    sign_in @admin
+    [
+      { name: "", price: 100 },
+      { name: products(:one).name, price: 100 },
+      { name: "価格なし", price: "" }
+    ].each do |attributes|
+      assert_no_difference "Product.count" do
+        post products_url, params: { product: attributes }
+      end
+      assert_response :unprocessable_entity
+      assert_select "#error_explanation li", minimum: 1
+    end
+  end
+
   test "product photo is uploaded and resized within 150 pixels" do
     sign_in @admin
     post products_url, params: { product: {

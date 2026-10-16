@@ -10,13 +10,13 @@
         <th>単価</th>
         <th>小計</th>
         <th>数量変更</th>
-        <th>削除</th><th>単品注文</th>
+        <th>削除</th>
       </tr>
     </thead>
     <tbody>
       <% @cart.cart_items.each_with_index do |item, index| %>
         <tr>
-          <td><%= link_to item.product.name, product_path(item.product) %></td>
+          <td><%= link_to item.product.name, product_path(item.product) %>（<%= item.product.status_i18n %>）</td>
           <td><%= item.quantity %></td>
           <td><%= "¥" + number_with_delimiter(item.product.price) %></td>
           <td><%= "¥" + number_with_delimiter(@item_totals[index]) %></td>
@@ -28,7 +28,6 @@
           <td>
             <%= button_to 'カートから消す', cart_item_path(item.id), method: :delete, data: { turbo_confirm: '本当に削除しますか？' } %>
           </td>
-          <td><%= link_to "この商品を注文する", new_order_path(product_id: item.product_id, count: item.quantity) %></td>
         </tr>
       <% end %>
     </tbody>
@@ -36,7 +35,7 @@
 
   <p><strong>合計金額: <%= "¥" + number_with_delimiter(@cart_total) %></strong></p>
 
-  <p>カート内の各商品を個別に注文できます。</p>
+  <%= link_to "注文へ進む", new_order_path %>
 <% else %>
   <p>カートは空です。</p>
 <% end %>
