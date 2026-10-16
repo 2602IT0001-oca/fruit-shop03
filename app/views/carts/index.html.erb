@@ -1,0 +1,40 @@
+<!-- app/views/carts/index.html.erb -->
+<h1>カートの中身</h1>
+
+<% if session[:cart].present? && session[:cart].any? %>
+  <table>
+    <thead>
+      <tr>
+        <th>商品名</th>
+        <th>個数</th>
+        <th>単価</th>
+        <th>小計</th>
+        <th>数量変更</th><th>削除</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% session[:cart].each do |item| %>
+        <% product = @products[item["id"]] %>
+        <tr>
+          <td><%= link_to product.name, product_path(product) %></td>
+          <td><%= item["count"] %></td>
+          <td><%= "¥" + number_with_delimiter(product.price) %></td>
+          <td><%= "¥" + number_with_delimiter(item["item_price"]) %></td>
+          <td>
+            <%= form_with url: update_quantity_cart_path(product.id), method: :post, local: true, data: { turbo: false } do %>
+              <%# RailsのヘルパーメソッドとJavaScriptを組み合わせて、ユーザーが選んだ数量を即座にカートに反映させるセレクトボックス %>
+              <%= select_tag "count", options_for_select(0..[99, item["count"]].max, item["count"]), onchange: "this.form.submit()" %>
+            <% end %>
+          </td>
+          <td><%= button_to 'カートから消す', remove_item_cart_path(product.id), method: :delete, data: { turbo_confirm: '本当に削除しますか？' } %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <p><strong>合計金額: <%= "¥" + number_with_delimiter(session[:cart_total]) %></strong></p>
+
+  <%= link_to "注文するにはログインまたは新規登録してください", new_user_session_path%>
+<% else %>
+  <p>カートは空です。</p>
+<% end %>

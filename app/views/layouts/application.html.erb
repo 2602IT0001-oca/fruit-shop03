@@ -17,20 +17,10 @@
   </head>
 
   <body>
-    <header>
-      <ul>
-          <% if user_signed_in? %>
-            <li><%= link_to "商品一覧", products_path %></li>
-            <li><%= link_to "注文履歴", orders_path %></li>
-            <li><%= link_to "マイページ", mypage_path(current_user) %></li>
-            <li><%= link_to "ログアウト", destroy_user_session_path, data: { turbo_method: :delete } %></li>
-          <% else %>
-            <li><%= link_to "サインアップ", new_user_registration_path %></li>
-            <li><%= link_to "ログイン", new_user_session_path %></li>
-          <% end %>
-      </ul>
-    </header>
+    <%= render "layouts/header" %>
 
+    <%= render "layouts/flash" %>
     <%= yield %>
+    <%= render "layouts/viewed_products" %>
   </body>
 </html>

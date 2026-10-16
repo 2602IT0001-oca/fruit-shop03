@@ -1,15 +1,28 @@
 <h1>商品詳細</h1>
 
 <div>
+  <% if @product.photo.attached? %>
+    <%= image_tag @product.thumbnail, alt: @product.name %>
+  <% end %>
   <p>商品名: <%= @product.name %></p>
   <p>説明: <%= @product.description %></p>
   <p>価格: <%= @product.price %>円</p>
 </div>
 
-<% if current_user.admin_flg == true %>
-  <%= link_to '編集', edit_product_path(@product) %>
+<% if current_user&.admin_flg? %>
+  <%= link_to "編集", edit_product_path(@product) %>
   <br>
-  <%= link_to '削除', destroy_product_path(@product), data: { turbo_method: :delete, turbo_confirm: '本当に削除しますか？' } %>
+  <%= link_to "削除", product_path(@product), data: { turbo_method: :delete, turbo_confirm: "本当に削除しますか？" } %>
+<% elsif !current_user %>
+  <%= form_with url: add_product_carts_path, local: true, data: { turbo: false } do |form| %>
+    <%= form.hidden_field :product_id, value: @product.id %>
+    <%= form.number_field :count, value: 1, min: 1 %>
+    <%= form.submit "カートに追加" %>
+  <% end %>
 <% else %>
-  <%= link_to '注文する', new_order_path(product_id: @product.id) %>
+  <%= form_with scope: :cart_item, url: cart_items_path do |form| %>
+    <%= form.hidden_field :product_id, value: @product.id %>
+    <%= form.number_field :quantity, value: 1, min: 1 %>
+    <%= form.submit "カートに追加" %>
+  <% end %>
 <% end %>

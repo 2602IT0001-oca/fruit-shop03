@@ -1,11 +1,9 @@
-# app/config/routes.rb
-
 Rails.application.routes.draw do
   devise_for :users, controllers: { registrations: "users/registrations" }
-  resources :mypage, only: [:show]
+  resources :mypage, only: :show
   resources :products
 
-  resources :orders, only: [:index, :new, :create] do
+  resources :orders, only: %i[index new create] do
     collection do
       post :confirm
     end
@@ -14,16 +12,17 @@ Rails.application.routes.draw do
     end
   end
 
-  delete "products/:id", to: "products#destroy", as: :destroy_product
+  resources :carts, only: %i[show index] do
+    collection do
+      post :add_product
+    end
+    member do
+      delete :remove_item
+      post :update_quantity
+    end
+  end
+  resources :cart_items, only: %i[create update destroy]
 
   root "homes#top"
-
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
-
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
-
-  # Defines the root path route ("/")
-  # root "posts#index"
 end

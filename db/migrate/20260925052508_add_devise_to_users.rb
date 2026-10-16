@@ -1,23 +1,15 @@
 # frozen_string_literal: true
 
+# User scaffoldで作成済みのname・emailは再追加しない。
+# NOT NULLは既存のRemoveScaffoldColumnsFromUsersで設定する。
+# Recoverableのカラムは既存のAlignUserSchemaWithDeviseで追加する。
 class AddDeviseToUsers < ActiveRecord::Migration[8.1]
   def change
     change_table :users do |t|
-      ## Database authenticatable
-      t.string :email,   null: false, default: ""
       t.string :encrypted_password, null: false, default: ""
-      t.string :name,  null: false
       t.boolean :admin_flg, null: false, default: false
-
-      ## recoverable
-      t.string  :reset_password_token
-      t.string
-
-
-      ## Rememberable
       t.datetime :remember_created_at
 
-      ## Trackable
       t.integer :sign_in_count, null: false, default: 0
       t.datetime :current_sign_in_at
       t.datetime :last_sign_in_at

@@ -1,5 +1,9 @@
 <h1>注文完了</h1>
+<h3>ご注文が完了しました。</h3>
 
+<% if @product.photo.attached? %>
+  <%= image_tag @product.thumbnail, alt: @product.name %>
+<% end %>
 <h4>商品名</h4>
 <%= @product.name %>
 

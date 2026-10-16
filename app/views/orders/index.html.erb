@@ -17,7 +17,12 @@
         <% # grouped_orders は日時にまとめられた注文の配列 %>
         <% grouped_orders.each do |order| %>
           <tr>
-            <td><%= order.product.name %></td>
+            <td>
+              <% if order.product.photo.attached? %>
+                <%= image_tag order.product.thumbnail, alt: order.product.name %>
+              <% end %>
+              <%= order.product.name %>
+            </td>
             <td><%= order.count %></td>
             <td><%= number_to_currency(order.total_price, unit: "¥", precision: 0) %></td>
             <td><%= order.address %></td>

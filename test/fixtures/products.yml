@@ -6,6 +6,6 @@ one:
   price: 1
 
 two:
-  name: MyString
+  name: MyOtherString
   description: MyText
   price: 1

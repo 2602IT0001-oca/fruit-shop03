@@ -45,16 +45,18 @@ class ProductsController < ApplicationController
       redirect_to product_path(@product)
     else
       # 失敗時に編集画面に戻る
-      render :edit
+      render :edit, status: :unprocessable_entity
     end
   end
 
   # 商品削除
   def destroy
     @product = Product.find(params[:id])
-    @product.destroy
-    # 商品一覧にリダイレクト
-    redirect_to products_path
+    if @product.destroy
+      redirect_to products_path, status: :see_other
+    else
+      redirect_to product_path(@product), alert: @product.errors.full_messages.join("、"), status: :see_other
+    end
   end
 
   private
@@ -67,6 +69,6 @@ class ProductsController < ApplicationController
 
     # ストロングパラメータで、フォームから送信されたデータを許可する
     def product_params
-      params.require(:product).permit(:name, :description, :price)
+      params.require(:product).permit(:name, :description, :price, :photo)
     end
 end

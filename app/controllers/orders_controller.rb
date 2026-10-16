@@ -1,51 +1,60 @@
 class OrdersController < ApplicationController
   before_action :authenticate_user!
+  before_action :check_customer, only: %i[new confirm create]
 
   def new
+    unless params[:product_id].present?
+      redirect_to products_path, alert: "注文する商品を選択してください。"
+      return
+    end
     @order = Order.new
     @product = Product.find(params[:product_id])
+    @order.count = params[:count] if params[:count].present?
   end
 
   def index
-    @orders = current_user.orders.all
+    @orders = current_user.orders.includes(:product).all
   end
 
   def confirm
-    @order = Order.new(order_params)
-    @product = Product.find(order_params[:product_id])
-    @order.user = current_user
-
+    @order = current_user.orders.new(order_params)
+    @product = Product.find(@order.product_id)
     if @order.valid?
       @order.total_price = cal_total_price(@product.price, @order.count)
     else
-      render :new and return
+      render :new, status: :unprocessable_entity
     end
   end
 
   def create
-    @order = Order.new(order_params)
-    @order.user_id = current_user.id
-
-    if @order.save
-      redirect_to complete_order_path(@order)
+    @order = current_user.orders.new(order_params)
+    @product = Product.find(@order.product_id)
+    # 合計金額はhiddenフィールドを信用せず、保存時にも計算する。
+    if @order.valid?
+      @order.total_price = cal_total_price(@product.price, @order.count)
+      @order.save!
+      redirect_to complete_order_path(@order), status: :see_other
     else
-      @product = Product.find(@order.product_id)
-      redirect_to new_order_path(product_id: @order.product_id)
+      render :new, status: :unprocessable_entity
     end
   end
 
   def complete
-    @order = Order.find(params[:id])
-    @product = Product.find(@order.product_id)
+    @order = current_user.orders.find(params[:id])
+    @product = @order.product
   end
 
   private
 
   def order_params
-    params.require(:order).permit(:total_price, :address, :count, :product_id)
+    params.require(:order).permit(:address, :count, :product_id)
   end
 
   def cal_total_price(price, count)
-    return price * count
+    price * count
+  end
+
+  def check_customer
+    redirect_to products_path, alert: "一般ユーザーでログインしてください。" if current_user.admin_flg?
   end
 end
